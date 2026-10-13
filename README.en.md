@@ -47,7 +47,7 @@ Copy the `auto-resume-for-codex-plus` folder from this repository to one of thes
 After installation, define the task in your project chat in the Codex desktop app, then simply say:
 
 ```text
-Enable automatic continuation
+$auto-resume-for-codex-plus enable automatic continuation
 ```
 
 Check status:
