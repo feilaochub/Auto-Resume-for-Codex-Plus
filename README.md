@@ -44,12 +44,10 @@ Copy the `auto-resume-for-codex-plus` folder from this repository to one of thes
 
 ### Enable and disable
 
-In your project chat in the Codex desktop app:
+After installation, define the task in your project chat in the Codex desktop app, then simply say:
 
 ```text
-$auto-resume-for-codex-plus
-Finish the remaining work agreed on in this chat.
-Enable automatic continuation after usage limits reset.
+Enable automatic continuation
 ```
 
 Check status:
