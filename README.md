@@ -1,70 +1,70 @@
-# Auto Resume for Codex Plus
+# Codex Plus 自动续跑技能
 
-[简体中文](README.zh-CN.md)
+[English](README.en.md)
 
-Let Codex continue unfinished work after usage limits reset.
+额度恢复后，让 Codex 自动继续未完成的工作。
 
-## Why this skill
+## 为什么做这个技能
 
-Built for Codex Plus users who hit the five-hour usage limit and have to remember the reset time, stay at their computer, and manually click “continue.” Enable it ahead of time so Codex can pick up unfinished work on a scheduled wake-up after quota becomes available again.
+为 Codex Plus 用户减少等待额度恢复的麻烦：5 小时额度耗尽后，不用再记住重置时间，也不用守在电脑前等着点“继续”。提前启用自动续跑，让 Codex 在额度恢复后的定时唤醒中接着完成工作。
 
-## How it works
+## 原理
 
-The skill sets up a native recurring schedule for the current chat. Each wake-up checks task status and available quota, then continues in the original chat and project directory. The schedule is deactivated when the task finishes or the user cancels it.
+利用 Codex 原生定时任务，提前为当前对话设置重复预约。定时唤醒后检查任务状态和可用额度，再从原对话、原项目目录继续工作；任务完成或用户取消后停用预约。
 
-The default retry interval is 60 minutes. Where supported, the first wake-up is scheduled for five minutes after the estimated quota reset. If quota data is unavailable, it attempts continuation on the recurring schedule.
+默认每 60 分钟重试；客户端支持时，优先在预计额度恢复的 5 分钟后首次唤醒。额度信息不可读时，按周期尝试续跑。
 
-## Features
+## 项目特色
 
-- **One file**: All continuation rules live in `SKILL.md`. Copy it to install.
-- **No extra dependencies**: Uses Codex's own capabilities without an additional MCP server, daemon, or other tools.
-- **Continue the original task**: Keeps the chat context and works in the original project directory.
+- **只需一个文件**：全部续跑规则都在 `SKILL.md` 中，复制即可安装。
+- **无需额外依赖**：利用 Codex 自身能力，无需额外安装 MCP、守护进程或其他工具。
+- **回到原任务继续**：保留原对话上下文，在原项目目录接着工作。
 
-## Usage
+## 使用方式
 
-### Install with AI
+### 让 AI 安装
 
-Send this directly to Codex to read the repository and install the skill:
+直接把下面这段话发给 Codex，让它读取仓库并安装：
 
 ```text
-Read this repository: https://github.com/feilaochub/Auto-Resume-for-Codex-Plus
-Follow its instructions to install the auto-resume-for-codex-plus skill in my personal skills directory.
-Preserve any existing skill with the same name, then tell me how to enable it.
+读取这个仓库：https://github.com/feilaochub/Auto-Resume-for-Codex-Plus
+按照仓库说明，将 auto-resume-for-codex-plus 技能安装到我的个人技能目录。
+已有同名技能时先保留原文件，安装后告诉我如何启用。
 ```
 
-### Manual installation
+### 手动安装
 
-Copy the `auto-resume-for-codex-plus` folder from this repository to one of these locations:
+将仓库中的 `auto-resume-for-codex-plus` 文件夹复制到以下任一位置：
 
-| Scope | Destination file |
+| 安装范围 | 目标文件路径 |
 | --- | --- |
-| Current project | `<project>/.agents/skills/auto-resume-for-codex-plus/SKILL.md` |
-| Personal, macOS | `~/.agents/skills/auto-resume-for-codex-plus/SKILL.md` |
-| Personal, Windows | `%USERPROFILE%\.agents\skills\auto-resume-for-codex-plus\SKILL.md` |
+| 当前项目 | `<项目目录>/.agents/skills/auto-resume-for-codex-plus/SKILL.md` |
+| macOS 个人安装 | `~/.agents/skills/auto-resume-for-codex-plus/SKILL.md` |
+| Windows 个人安装 | `%USERPROFILE%\.agents\skills\auto-resume-for-codex-plus\SKILL.md` |
 
-### Enable and disable
+### 启用与关闭
 
-After installation, define the task in your project chat in the Codex desktop app, then simply say:
-
-```text
-Enable automatic continuation
-```
-
-Check status:
+安装后，在 Codex 桌面版的项目对话中明确要完成的任务，再直接说：
 
 ```text
-$auto-resume-for-codex-plus status
+开启自动续跑
 ```
 
-Disable:
+查看状态：
 
 ```text
-$auto-resume-for-codex-plus disable automatic continuation
+$auto-resume-for-codex-plus 查看状态
 ```
 
-## Notes
+关闭自动续跑：
 
-- This project is for the Codex desktop app, primarily for Plus users. It is not intended for other AI assistants.
-- Keep the computer on, Codex running, and the project directory accessible.
-- The default retry interval is 60 minutes, so continuation may not happen immediately after reset. Authorization expires after 14 days unless you specify another deadline. Without native expiry, expiry is checked and the schedule deactivated on the next successful wake-up.
-- Continuation modifies the original project directory. Disable it before manually continuing work to reduce the risk of overlapping edits.
+```text
+$auto-resume-for-codex-plus 关闭自动续跑
+```
+
+## 注意事项
+
+- 本项目仅适用于 Codex 桌面版，主要面向 Plus 用户，不适用于其他 AI 助手。
+- 保持电脑开机、Codex 应用运行，且项目目录可访问。
+- 默认重试间隔为 60 分钟，额度恢复后不一定立即续跑。默认授权有效期为 14 天，可在启用时指定其他期限；无原生到期功能时，需等下一次成功唤醒才会检查到期并停用。
+- 续跑会直接操作原项目目录。手动继续工作前，建议先关闭自动续跑，减少并发修改风险。
