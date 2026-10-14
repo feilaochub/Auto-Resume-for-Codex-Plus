@@ -48,17 +48,28 @@ Before lengthy work, inspect existing schedules through the supported read/list 
 
 Match by chat binding and this task's saved identity, not display name alone. Reuse a matching schedule. If a prior creation result is ambiguous, inspect before retrying; if identity cannot be established, report uncertainty instead of risking a duplicate. Never overwrite a different same-chat heartbeat. If the client permits only one and it is occupied by unrelated work, ask how the user wants to resolve it.
 
-Defaults, unless the user specifies otherwise:
+### Prefer the actual reset time
 
-- Retry every **60 minutes**, using only supported cadence syntax.
-- If the scheduler supports a first-run time as well as recurrence, start at the estimated applicable reset plus **5 minutes**. Otherwise use hourly recurrence and disclose that the first wake-up is not precisely aligned. Do not make a one-shot schedule the only recovery mechanism.
-- Set an authorization expiry **14 days after enablement**, record it in the prompt, and report it to the user. A user-specified deadline takes precedence. Use native schedule expiry if supported; otherwise enforce expiry on every model wake-up and disclose that deactivation requires a successful wake-up.
-- Keep the schedule armed while work remains, including after a successful resumption, so another quota interruption can recover. Do not create a new schedule each time.
+Select a future target `T` from current usage data: the latest reset of all applicable blocking windows, or the earliest applicable upcoming reset when arming recovery before exhaustion, plus **5 minutes** of buffer. Do not let an exhausted weekly window be hidden by an earlier short-window reset. If an applicable blocking reset is unknown, precise scheduling is unavailable.
+
+Use this priority order, reading the native tool's supported timing fields and bounds first:
+
+1. **Reset-aligned recurring schedule:** Set the next/first wake-up to `T`, with **60-minute** retries after that if the first wake-up cannot resume work. Use a supported start time, next-run field, or recurrence expression; do not require a field literally named “first run.”
+2. **Relative recurring interval:** If there is no separate start field but a documented interval begins from creation/update, set it to the delay until `T` (round up to supported granularity). Verify the reported next run. After a successful wake-up, recompute the next reset and retime the same schedule; if quota is still blocked and no new reset is known, change it to 60-minute retries. Until a model wake-up succeeds, the scheduler may retry at the original longer interval; disclose that limitation. Do not use this method if interval updates do not reliably reset the next run.
+3. **Hourly fallback:** Use **60-minute** recurring checks only if the reset is unknown or neither supported method can target it. Explain the exact missing capability. Record `T` in the prompt when known; an early fallback wake-up should check completion/cancellation, then return quietly without resuming work before `T`. A prompt gate does not prevent the scheduler from triggering or consuming quota.
+
+Do not silently replace recurrence with a single one-shot appointment: if the platform rejects that run before the model executes, the skill cannot reschedule itself. Offer one-shot mode only if the user explicitly accepts this loss of automatic retries. Do not invent unsupported scheduling fields, change to a standalone task, or use external scheduling services to achieve alignment.
+
+After each successful wake-up, or a material quota/reset change observed during normal work, recompute `T` and update the same schedule before lengthy work continues. Do not retime on every command or extend the authorization expiry automatically. If updating fails, preserve and read back the existing schedule, report the actual next run, and never claim reset alignment unless confirmed. Ensure cleanup rules remain present in every saved prompt update.
+
+Set an authorization expiry **14 days after enablement**, record it in the prompt, and report it to the user. A user-specified deadline takes precedence. If `T` is after expiry, report that the current authorization cannot cover that reset; do not quietly extend it. Use native schedule expiry if supported; otherwise enforce expiry on every model wake-up and disclose that deactivation requires a successful wake-up.
+
+Keep the schedule armed while work remains, including after a successful resumption, so another quota interruption can recover. Do not create a new schedule each time. Retry intervals and buffers may be changed by the user.
 
 Save a durable, human-readable prompt containing:
 
 - A marker `auto-resume-for-codex-plus`, the task identity, original chat binding, and absolute working directory.
-- The authorized outcome, completion checks, scope restrictions, enable time, expiry, timezone, and any checkpoint location.
+- The authorized outcome, completion checks, scope restrictions, enable time, expiry, timezone, target `T` and timing mode, and any checkpoint location.
 - The wake-up rules below, including stop conditions, usage checks, original-directory verification, and duplicate-run handling. Include these essential rules directly so a missing skill installation does not turn the prompt into an unrestricted “continue.”
 - An instruction to stay quiet while unchanged or waiting, and report meaningful progress, completion, failure, or required user input. Keep notification preferences in native settings where supported.
 
@@ -74,10 +85,10 @@ Apply the same finish/stop cleanup during foreground work: once the task is veri
 
 Apply these decisions in order:
 
-1. **Latest intent:** Check subsequent user messages and current task state. If canceled, paused, disabled, superseded by incompatible work, expired, or already completed, deactivate this schedule and do not revive the saved task. A stale prompt or checkpoint cannot override newer user intent.
+1. **Latest intent:** Check subsequent user messages and current task state. If canceled, paused, disabled, superseded by incompatible work, expired, or already completed, deactivate this schedule and end this wake-up without modifying project files or starting work. Establish completion from the original acceptance criteria and available verification evidence, not a previous message saying “done.” Do not repeat completed operations to prove completion or absorb new user tasks into the old appointment. A stale prompt or checkpoint cannot override newer user intent.
 2. **Task and location:** Confirm the original chat context and directory still match. Inspect current files, changes, and recent results before selecting the next step. Do not reset, overwrite, or recreate missing workspaces to restore an old snapshot. If context or location cannot be verified, deactivate and report the blocker.
 3. **Other execution:** Use active-run status if provided, excluding this wake-up itself. If another manual or scheduled run is already doing the work, leave the schedule armed and skip this wake-up. Do not interrupt another run. If the client cannot establish safe same-chat serialization or active-run status, do not start potentially overlapping mutations; deactivate and report the limitation. This skill has no independent execution lock and cannot promise exactly-once execution.
-4. **Quota:** Reread when possible. If still blocked, keep the recurring schedule, update a supported first-run time if useful, and return quietly. Do not loop or sleep until reset. If unknown, use the bounded safe-step fallback above.
+4. **Quota and timing:** Reread when possible. If still blocked, retime the same recurring schedule to the newly reported reset plus buffer; if no usable future reset is known, use hourly retries. For an early fallback wake-up before saved `T`, return quietly after the stop and completion checks. If quota is available and `T` has arrived, refresh the recovery schedule for the next applicable reset before continuing lengthy work. Do not loop or sleep until reset. If quota is unknown, use the safe-step fallback above when eligible.
 5. **Work:** Continue from actual current state within the original authorization. Verify partial edits and previous command results before repeating an action with side effects. Continue useful work until completion or a real interruption; do not limit each wake-up to a status report.
 6. **Finish or stop:** On verified completion, deactivate. On required user input, permissions, non-quota execution failures that cannot be resolved within scope, or workspace conflicts, deactivate and report the specific blocker. Do not repeatedly restart a failed operation. Leave the schedule active only for useful ongoing work or quota waiting.
 

@@ -12,7 +12,9 @@ Built for Codex Plus users who hit the five-hour usage limit and have to remembe
 
 The skill sets up a native recurring schedule for the current chat. Each wake-up checks task status and available quota, then continues in the original chat and project directory. The schedule is deactivated when the task finishes or the user cancels it.
 
-The default retry interval is 60 minutes. Where supported, the first wake-up is scheduled for five minutes after the estimated quota reset. If quota data is unavailable, it attempts continuation on the recurring schedule.
+When the quota reset time is readable, target a wake-up five minutes after it. Use hourly checks only when the reset is unknown or the native scheduler cannot target it. If still blocked on wake-up, retime the existing schedule using the latest reset; use hourly retries when no usable reset is available.
+
+If work finishes early, deactivate the schedule immediately. If cleanup fails and it still triggers, only check completion and clean up the schedule; do not restart finished work.
 
 ## Features
 
@@ -66,5 +68,5 @@ $auto-resume-for-codex-plus disable automatic continuation
 
 - This project is for the Codex desktop app, primarily for Plus users. It is not intended for other AI assistants.
 - Keep the computer on, Codex running, and the project directory accessible.
-- The default retry interval is 60 minutes, so continuation may not happen immediately after reset. Authorization expires after 14 days unless you specify another deadline. Without native expiry, expiry is checked and the schedule deactivated on the next successful wake-up.
+- Use the verified next-run time as the actual schedule. Some clients support only a relative recurring interval; if a wake-up fails before the model executes, the next retry may be delayed by that longer interval. The agent reports the timing mode when enabling recovery. Authorization expires after 14 days unless you specify another deadline. Without native expiry, expiry is checked and the schedule deactivated on the next successful wake-up.
 - Continuation modifies the original project directory. Disable it before manually continuing work to reduce the risk of overlapping edits.
